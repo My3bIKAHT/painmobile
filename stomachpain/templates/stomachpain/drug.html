@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Embedding Font Awesome for icons -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+</head>
+<body>
+<div class="app_name">{{ dictionary.app_name }}</div>
+{% if form %}
+	<div class="editor_wrapper">
+		<a href="{% url 'stomachpain:index' %}">&lt; назад к списку вопросов</a>
+		{% if message %}
+			<h1> {{ message }}</h1>
+		{% endif %}
+		{% if image_url %}
+		<div class="drug_preview" style="background-image: url('{{ image_url }}')"></div>
+		{% endif %}
+		<form action="{% url 'stomachpain:drug_submit' %}" method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+    		{{ form }}
+    		<br><br>
+			<input type="submit" value="Сохранить"> 
+			{% if drug_id %}
+				<a href="{% url 'stomachpain:drug_delete' drug_id %}" class="drug-delete"><i class="fas fa-trash-alt"></i> Удалить</a>
+			{% endif %}
+		</form>
+
+
+	</div>
+{% else %}
+    <p>Такого препарата нет</p>
+{% endif %}
+
+<style>
+	body {
+		font-family: sans-serif;
+		font-size: 13px;
+		background-color: #ddd;
+	}
+	.app_name {
+		font-size: 20px;
+		font-weight: bold;
+		text-align: center;
+		display: block;
+		height: auto;
+		padding: 10px;
+		background-color: #a5d6ea;
+		border-radius: 50px;
+	}
+	label {
+		display: block;
+		margin-top: 20px;
+		font-weight: bold;
+		font-size: 14px;
+		clear: both;
+	}
+
+	label[for=image_file-clear_id] {
+		display: inline-block;
+	}
+
+	.drug_preview {
+		width: 200px;
+		height: 200px;
+		background-position: center center;
+		background-size: cover;
+		border: 1px solid lightgray;
+	}
+
+	#id_drug_name {
+		font-size: 26px;
+	}
+
+	#id_drug_guide_url {
+		width: 300px;
+	}
+
+	textarea {
+		font-size: 14px;
+	}
+
+	.editor_wrapper {
+		background-color: white;
+		border-radius: 5px;
+		display: block;
+		padding: 20px;
+		margin: 20px;
+		margin-bottom: 30px;
+    	box-shadow: 5px 5px 10px #bbb;
+	}
+
+	.editor_wrapper input[type=submit] {
+		padding: 8px;
+		background-color: #1887b0;
+		border-radius: 3px;
+		display: inline-block;
+		margin: 0 5px;
+		text-decoration: none;
+		color: white;
+	    -webkit-transition: background-color 500ms ease-out;
+	    -moz-transition: background-color 500ms ease-out;
+    	-o-transition: background-color 500ms ease-out;
+    	transition: background-color 500ms ease-out;
+    	border: 0;
+    	font-size: 13px;
+	} 
+
+	.editor_wrapper input[type=submit]:hover, input[type=submit]:active  {
+		background-color: #599611;
+		cursor: pointer;
+	} 
+
+	#id_question_id {
+		border: none;
+		width: 30px;
+	}
+
+	#id_question_text {
+		font-size: 20px;
+		width: 100%;
+		height: 30px;
+	}
+
+	#id_diagnosis_text {
+		width: 100%;
+		height: 100px;
+		border-top: 3px solid #2569be;
+	}
+
+	#id_recommendations_text {
+		width: 100%;
+		height: 100px;
+		border-top: 3px solid #82be25;
+	}
+
+	#id_contraindications_text {
+		width: 100%;
+		height: 100px;
+		border-top: 3px solid red;
+	}
+
+	#id_precautions_text {
+		width: 100%;
+		height: 100px;
+		border-top: 3px solid orange;
+	}
+
+	.drug-delete {
+		padding: 8px;
+		background-color: #1887b0;
+		border-radius: 3px;
+		display: inline-block;
+		margin: 0 5px;
+		text-decoration: none;
+		color: white;
+	    -webkit-transition: background-color 500ms ease-out;
+	    -moz-transition: background-color 500ms ease-out;
+    	-o-transition: background-color 500ms ease-out;
+    	transition: background-color 500ms ease-out;
+	}
+
+	.drug-delete:hover {
+		background-color: #ac1b17;
+	}
+
+</style>
+
+
+</body>
+</html>

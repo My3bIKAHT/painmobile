@@ -1,0 +1,385 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+
+<!-- Latest Sortable drag-n-drop library -->
+<script src="//rubaxa.github.io/Sortable/Sortable.js"></script>
+
+<!-- Embedding Font Awesome for icons -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+
+
+</head>
+<body>
+
+
+<div id="status_message"></div>
+
+<div class="app_name">{{ dictionary.app_name }}</div>
+<div id="sortableList" class="list-group">
+{% if latest_question_list %}
+    {% for question in latest_question_list %}
+			<div class="question_wrapper list-group-item">
+				{% if question.interrupt_boolean %}
+					<div class="question_interrupt">
+						<i class="fas fa-exclamation-triangle"></i>
+					</div>
+				{% else %}
+					<div class="question_continue">
+						<i class="fas fa-angle-down fa-2x"></i>
+					</div>
+				{% endif %}
+				<div class="question_id" style="display: none;">
+					{{ question.id }}
+				</div>
+				<div class="question">
+					<p>Вопрос №<span class="list-number">{{ question.question_order_id }}</span>:</p>
+					<h2> {{ question.question_text }}</h2>
+				</div>
+				<div class="diagnosis">
+					<p><strong>Диагноз:</strong> {{ question.diagnosis_text|truncatechars:100 }}</p>
+				</div>
+				<div class="medicine">
+					<p><strong>Препараты:</strong>
+						{% for drug in question.drugs.all %}
+        					<li><a href="{% url 'stomachpain:drug_edit' drug.id %}"><i class="fas fa-prescription-bottle-alt"></i> {{ drug }}</a></li>
+						{% endfor %}
+					</p>
+				</div>
+				<div class="recommendations {% if question.interrupt_boolean %}warning{% endif%}">
+					<p><strong>Рекомендации:</strong> {{ question.recommendations_text|truncatechars:100 }}</p>
+				</div>
+				<div class="editing">
+					<i class="fas fa-arrows-alt fa-2x"></i>
+					<a class="edit" href="{% url 'stomachpain:edit' question.id %}"><i class="fas fa-pen"></i> Редактировать</a> 
+					<a class="delete" href="{% url 'stomachpain:delete' question.id %}"><i class="fas fa-trash-alt"></i> Удалить</a>
+				</div>
+			</div>
+    {% endfor %}
+{% else %}
+    <p>Вопросов на данный момент нет</p>
+{% endif %}
+	<div class="add_button_wrapper">
+		<a class="add" href="{% url 'stomachpain:add' %}"><i class="fas fa-plus"></i> Добавить вопрос</a>
+	</div>
+</div>
+<div id="drugsList">
+	{% if latest_drug_list %}
+		<div class="drugsWrapper">
+			<h2>Препараты</h2>
+	    {% for drug in latest_drug_list %}
+	    	<div class="drugWrapper">
+				<div class="drug_id" style="display: none;">
+					{{ drug.id }}
+				</div>
+				<div class="drug_name">
+					<a href="{% url 'stomachpain:drug_edit' drug.id %}"><i class="fas fa-prescription-bottle-alt"></i> {{ drug.drug_name }} </a>
+				</div>
+			</div>
+	    {% endfor %}
+		</div>
+	{% else %}
+		<p style="text-align: center;">Препараты в списке отсутствуют</p>
+	{% endif %}
+	<div class="add_button_wrapper">
+		<a class="add" href="{% url 'stomachpain:drug_add' %}"><i class="fas fa-plus"></i> Добавить препарат</a> 
+
+	</div>
+</div>
+
+
+<script type="text/javascript">
+	//Enumerate function for the list 
+	function enumerate() {
+		var question_list = [];
+		var list_items = document.getElementsByClassName('question_wrapper');
+		var index = 0;
+		var question_id = 0;
+		Array.prototype.forEach.call(list_items, function(el) {
+			index++;
+			el.getElementsByClassName('question')[0].getElementsByTagName('p')[0].getElementsByClassName('list-number')[0].innerHTML = index;
+			question_id = parseInt(el.getElementsByClassName('question_id')[0].innerHTML);
+			question_list.push({
+				'question_id' : question_id, 
+				'order_id' : index
+			});
+		});
+
+	var JSONstring = JSON.stringify(question_list);
+	console.log(JSON.parse(JSONstring));
+
+	var xhr = new XMLHttpRequest();
+	var url = "http://127.0.0.1:8000/stomachpain/json/order/";
+	xhr.open("POST", url, true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.onreadystatechange = function () {
+	    if (xhr.readyState === 4 && xhr.status === 200) {
+	        console.log("Success!");
+	        show_status_message("Порядок обновлен успешно");
+	    }
+	};
+	xhr.send(JSONstring);
+	}
+
+	// Sortable plugin for changing questions order on the page 
+	function sortableStart() {
+    	Sortable.create(sortableList, {handle: '.fa-arrows-alt', onUpdate: enumerate});
+	}
+	window.onload = sortableStart;
+
+	function hide_status_message() {
+		var message_holder = document.getElementById('status_message');
+		message_holder.style.opacity = 0;
+		}
+
+
+	function show_status_message(status_message) {
+		var message_holder = document.getElementById('status_message');
+		message_holder.innerHTML = status_message;
+		message_holder.style.opacity = 1;
+		setTimeout("hide_status_message()",3000);
+	}
+
+</script>
+
+
+<style>
+	body {
+		font-family: sans-serif;
+		font-size: 13px;
+		background-color: #ddd;
+	}
+	.app_name {
+		font-size: 20px;
+		font-weight: bold;
+		text-align: center;
+		display: block;
+		height: auto;
+		padding: 10px;
+		background-color: #a5d6ea;
+		border-radius: 50px;
+	}
+	#status_message {
+		background-color: #9dccfd;
+		display: inline-block;
+		opacity: 0;
+		position: fixed;
+		top: 0;
+		right: 0;
+		padding: 20px;
+		z-index: 999;
+		text-align: center;
+		height: auto;
+	    -webkit-transition: all 500ms ease-out 1s;
+	    -moz-transition: all 500ms ease-out 1s;
+    	-o-transition: all 500ms ease-out 1s;
+    	transition: all 500ms ease-out 1s;
+    	border-radius: 0 0 0 10px;
+    	color: white;
+    	font-weight: bold;
+	}
+
+	#sortableList {
+		width: 75%;
+		float: left;
+	}
+
+	#drugsList {
+		width: 25%;
+		float: right;
+	}
+
+	.drugsWrapper {
+		padding: 20px;
+	}
+
+	.drugsWrapper h2 {
+		margin-bottom: 10px;
+	}
+
+	.drugWrapper {
+		display: inline-block;
+		padding: 7px 9px;
+		margin: 3px;
+		background-color: #55257a;
+		border-radius: 3px;
+		color: white;
+	}
+
+	.drugWrapper:hover, .drugWrapper:active {
+		background-color: #6a13ad;
+	}
+
+	.drugWrapper a {
+		color: white;
+		text-decoration: none;
+	}
+
+	.drugWrapper a:hover {
+		text-decoration: underline;
+	}
+
+	.warning {
+		border: 1px solid red;
+	}
+
+	.divider_down {
+		display: block;
+		text-align: center;
+	}
+
+	.question_wrapper {
+		position: relative;
+		border-radius: 5px;
+		border-top-left-radius: 0;
+		display: block;
+		padding: 20px;
+		margin: 20px;
+		margin-bottom: 30px;
+		background-color: #fff;
+    	box-shadow: 5px 5px 10px #bbb;
+	}
+
+	div.question_interrupt {
+		position: absolute;
+		top: 0;
+		left: -20px;
+		display: block;
+		background-color: white;
+		padding: 7px 7px 7px 5px;
+		border-radius: 5px 0 0 5px;
+	}
+
+	div.question_interrupt > i {
+		color: red;
+	}
+
+	div.question_continue {
+		position: absolute;
+		top: 0;
+		left: -20px;
+		display: block;
+		background-color: white;
+		padding: 7px 7px 7px 7px;
+		border-radius: 5px 0 0 5px;
+	}
+
+	div.question_continue > i {
+		color: lightblue;
+	}
+
+	.question_wrapper > div.question {
+		display: block;
+		vertical-align: top;
+	}
+
+	.question_wrapper > div.question > h1,h2,h3,h4,h5,h6 {
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+	.question_wrapper p {
+		margin-bottom: 0;
+	}
+
+	div.diagnosis {
+		display: inline-block;
+		width: 60%;
+		padding: 0 10px;
+		margin-top: 5px;
+		vertical-align: top;
+	}
+
+	div.medicine {
+		display: inline-block;
+		width: 30%;
+		padding: 0 10px;
+		margin-top: 5px;
+		vertical-align: top;
+	}
+
+	div.medicine li {
+		list-style: none;
+		display: inline-block;
+		padding: 7px 9px;
+		background-color: #55257a;
+		border-radius: 3px;
+		color: white;
+	}
+
+	div.medicine li:hover, div.medicine li:active {
+		background-color: #6a13ad;
+	}
+
+	div.medicine li a {
+		color: white;
+		text-decoration: none;
+	}
+
+	div.medicine li a:hover {
+		text-decoration: underline;
+	}
+
+	.question_wrapper p {
+		margin-top: 5px;
+		margin-bottom: 5px;
+	}
+
+	.question_wrapper > div.recommendations {
+		display: inline-block;
+		width: 60%;
+		padding: 0 10px;
+		margin-top: 5px;
+		vertical-align: top;
+	}
+	.question_wrapper > div.editing {
+		display: block;
+		vertical-align: top;
+		margin-top: 10px;
+	}
+	.question_wrapper > div.editing > a {
+		padding: 8px;
+		background-color: #1887b0;
+		border-radius: 3px;
+		display: inline-block;
+		margin: 0 5px;
+		text-decoration: none;
+		color: white;
+	    -webkit-transition: background-color 500ms ease-out;
+	    -moz-transition: background-color 500ms ease-out;
+    	-o-transition: background-color 500ms ease-out;
+    	transition: background-color 500ms ease-out;
+	}
+	.question_wrapper > div.editing > a.edit:hover, a.edit:active {
+		background-color: #599611;
+	}
+	.question_wrapper > div.editing > a.delete:hover, a.delete:active {
+		background-color: #ac1b17;
+	}
+
+	.add_button_wrapper {
+		text-align: center;
+		padding-bottom: 20px;
+	}
+
+	a.add {
+		padding: 8px;
+		background-color: #1887b0;
+		border-radius: 3px;
+		display: inline-block;
+		margin: 0 5px;
+		text-decoration: none;
+		color: white;
+	    -webkit-transition: background-color 500ms ease-out;
+	    -moz-transition: background-color 500ms ease-out;
+    	-o-transition: background-color 500ms ease-out;
+    	transition: background-color 500ms ease-out;
+	}
+
+	a.add:hover, a.add:active {
+		background-color: #d9a20e;
+	} 
+
+</style>
+
+</body>
+</html>
