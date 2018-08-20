@@ -212,7 +212,10 @@ def drug_submit(request):
 				drug_to_add.precautions_text = form.cleaned_data['precautions_text']
 				drug_to_add.drug_guide_url = form.cleaned_data['drug_guide_url']
 				# сохраняем изображение
-				drug_to_add.image_file = request.FILES['image_file']
+				if 'image_file' in request.FILES:
+					drug_to_add.image_file = request.FILES['image_file']
+				else:
+					drug_to_add.image_file = None
 				drug_to_add.save()
 				return redirect('/headache/')
 			else:
@@ -224,6 +227,12 @@ def drug_submit(request):
 				drug_to_edit.contraindications_text = form.cleaned_data['contraindications_text']
 				drug_to_edit.precautions_text = form.cleaned_data['precautions_text']
 				drug_to_edit.drug_guide_url = form.cleaned_data['drug_guide_url']
+
+				# четыре случая: 
+				# - картинка не приложена, галочка на удаление не стоит
+				# - картинка приложена, галочка на удаление не стоит
+				# - картинка не приложена, галочка стоит
+				# - картинка приложена, галочка стоит
 
 				if 'image_file-clear' in request.POST:
 					# если стоит галочка "удалить картинку"
